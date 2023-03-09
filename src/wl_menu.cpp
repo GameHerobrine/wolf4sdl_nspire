@@ -3112,6 +3112,8 @@ HandleMenu (CP_iteminfo * item_i, CP_itemtype * items, void (*routine) (int w))
                 (items + which)->routine (0);
             }
             return which;
+	case 2:
+		return -1;
     }
 
     return 0;                   // JUST TO SHUT UP THE ERROR MESSAGES!

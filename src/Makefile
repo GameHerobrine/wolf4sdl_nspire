@@ -1,38 +1,40 @@
-CC = gcc
-CXX = g++
-LD = gcc
+CC = nspire-gcc
+CXX = nspire-g++
+LD = nspire-gcc
+
+BINARY    = wolf3d
 
 DATADIR   = ./
 
-WOLF_VERSION = SHAREWARE
+WOLF_VERSION = ACTIVISION
 
-CFLAGS += -Ofast
+CFLAGS += -Ofast -fdata-sections -ffunction-sections -marm -march=armv5te -mtune=arm926ej-s
 
 ifdef DATADIR
 CFLAGS += -DDATADIR=\"$(DATADIR)\"
 endif
 
 ifeq ($(WOLF_VERSION),SHAREWARE)
-BINARY    = wolf3d_shareware
+GEN_NAME  = wolf_shareware.tns
 CFLAGS += -DCARMACIZED -DUPLOAD
 else ifeq ($(WOLF_VERSION),ACTIVISION)
-BINARY    = wolf3d_activision
+GEN_NAME  = wolf_activision.tns
 CFLAGS += -DGOODTIMES -DCARMACIZED
 else ifeq ($(WOLF_VERSION),APOGEE)
-BINARY    = wolf3d_apogee
+GEN_NAME  = wolf_apogee.tns
 CFLAGS += -DCARMACIZED
 else ifeq ($(WOLF_VERSION),SPEAR_FULL)
-BINARY    = wolf3d_spear
+GEN_NAME  = wolf_spear.tns
 CFLAGS += -DCARMACIZED -DSPEAR
 else ifeq ($(WOLF_VERSION),SPEAR_DEMO)
-BINARY    = wolf3d_speardemo
+GEN_NAME  = wolf_speardemo.tns
 CFLAGS += -DCARMACIZED -DSPEAR -DSPEARDEMO
 endif
 
 
 CXXFLAGS += $(CFLAGS)
 
-LDFLAGS += -lSDL -lm
+LDFLAGS += -lSDL -Wl,--as-needed -Wl,--gc-sections -flto
 
 SRCS :=
 SRCS += id_ca.cpp
@@ -62,10 +64,15 @@ SRCS += wl_shade.cpp
 
 OBJS = $(filter %.o, $(SRCS:.c=.o) $(SRCS:.cpp=.o))
 
-all: $(BINARY)
+all: $(BINARY) gen
 
 $(BINARY): $(OBJS)
 	$(CXX) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $@
+
+gen :
+	genzehn --input $(BINARY) --output wolf3d.t --compress
+	make-prg wolf3d.t $(GEN_NAME)
+	rm $(BINARY) wolf3d.t
 
 .c.o:
 	$(CC) $(CFLAGS) -c $< -o $@
